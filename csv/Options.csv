@@ -1,0 +1,20 @@
+Setting,Customize,Hints,Examples
+Storymap Info,,,
+Storymap Title,Synagogue Map,,
+Storymap Subtitle,"Mapping Greater Hartford's Synagogues Over Time<br><small>Scroll down <i class=""fa fa-chevron-down""></i></small>
+",,
+Storymap Logo,media/jhsgh-logo.gif,,
+Map Settings,,,
+Basemap Tiles,CartoDB.Positron,Drop-down menu for background basemap tiles,https://leaflet-extras.github.io/leaflet-providers/preview/
+Zoom Controls,bottomright,,
+Narrative Background Color,,,
+Narrative Text Color,,,
+Narrative Link Color,,,
+Active Chapter Background Color,,,
+Media Container Height,300,"Maximum height of the image, in pixels. 200 is default. The image will be fit into the container with its proportions kept (it won't be skewed).",
+Pixels After Final Chapter,600,In pixels. At least 100,
+Credits,,,
+Author Name,Jewish Historical Society of Greater Hartford,"Appears in map credits as ""View data by..."" (or leave blank)",
+Author Email or Website,https://www.jhsgh.org,Create link in Author Name by inserting your email or web address (or leave blank),
+Author GitHub Repo Link,https://github.com/HandsOnDataViz/leaflet-storymaps-with-google-sheets,"Appears in map credits as ""View code..."" link (leave as-is OR insert link to your own GitHub code repo)",
+Code Credit,"<a href=""https://handsondataviz.org"">HandsOnDataViz</a>",,
