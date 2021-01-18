@@ -4,12 +4,6 @@ $(window).on('load', function() {
   // Some constants, such as default settings
   const CHAPTER_ZOOM = 15;
 
-  // This watches for the scrollable container
-  var scrollPosition = 0;
-  $('div#contents').scroll(function() {
-    scrollPosition = $(this).scrollTop();
-  });
-
   // First, try reading Options.csv
   $.get('csv/Options.csv', function(options) {
 
@@ -219,6 +213,8 @@ $(window).on('load', function() {
         'jpg': 'img',
         'jpeg': 'img',
         'png': 'img',
+        'tiff': 'img',
+        'gif': 'img',
         'mp3': 'audio',
         'ogg': 'audio',
         'wav': 'audio',
@@ -230,8 +226,20 @@ $(window).on('load', function() {
       if (mediaType) {
         media = $('<' + mediaType + '>', {
           src: c['Media Link'],
-          controls: mediaType == 'audio' ? 'controls' : '',
+          controls: mediaType === 'audio' ? 'controls' : '',
+          alt: c['Chapter']
         });
+
+        var enableLightbox = getSetting('_enableLightbox') === 'yes' ? true : false;
+        if (enableLightbox && mediaType === 'img') {
+          var lightboxWrapper = $('<a></a>', {
+            'data-lightbox': c['Media Link'],
+            'href': c['Media Link'],
+            'data-title': c['Chapter'],
+            'data-alt': c['Chapter'],
+          });
+          media = lightboxWrapper.append(media);
+        }
 
         mediaContainer = $('<div></div', {
           class: mediaType + '-container'
@@ -280,6 +288,10 @@ $(window).on('load', function() {
           && currentPosition < (pixelsAbove[i+1] - 2 * chapterContainerMargin)
           && currentlyInFocus != i
         ) {
+
+          // Update URL hash
+          location.hash = i + 2;
+
           // Remove styling for the old in-focus chapter and
           // add it to the new active chapter
           $('.chapter-container').removeClass("in-focus").addClass("out-focus");
@@ -302,25 +314,26 @@ $(window).on('load', function() {
 
           // Add chapter's overlay tiles if specified in options
           if (c['Overlay']) {
-            var opacity = (c['Overlay Transparency'] !== '') ? parseFloat(c['Overlay Transparency']) : 1;
+
+            var opacity = parseFloat(c['Overlay Transparency']) || 1;
             var url = c['Overlay'];
 
-            if (url.split('.').pop() == 'geojson') {
+            if (url.split('.').pop() === 'geojson') {
               $.getJSON(url, function(geojson) {
                 overlay = L.geoJson(geojson, {
                   style: function(feature) {
                     return {
-                      fillColor: feature.properties.COLOR,
-                      weight: 1,
-                      opacity: 0.5,
-                      color: feature.properties.COLOR,
-                      fillOpacity: 0.5,
+                      fillColor: feature.properties.fillColor || '#ffffff',
+                      weight: feature.properties.weight || 1,
+                      opacity: feature.properties.opacity || opacity,
+                      color: feature.properties.color || '#cccccc',
+                      fillOpacity: feature.properties.fillOpacity || 0.5,
                     }
                   }
                 }).addTo(map);
               });
             } else {
-              overlay = L.tileLayer(c['Overlay'], {opacity: opacity}).addTo(map);
+              overlay = L.tileLayer(c['Overlay'], { opacity: opacity }).addTo(map);
             }
 
           }
@@ -344,11 +357,11 @@ $(window).on('load', function() {
               geoJsonOverlay = L.geoJson(geojson, {
                 style: function(feature) {
                   return {
-                    fillColor: feature.properties.COLOR || props.fillColor || 'white',
-                    weight: props.weight || 1,
-                    opacity: props.opacity || 0.5,
-                    color: feature.properties.COLOR || props.color || 'silver',
-                    fillOpacity: props.fillOpacity || 0.5,
+                    fillColor: feature.properties.fillColor || props.fillColor || '#ffffff',
+                    weight: feature.properties.weight || props.weight || 1,
+                    opacity: feature.properties.opacity || props.opacity || 0.5,
+                    color: feature.properties.color || props.color || '#cccccc',
+                    fillOpacity: feature.properties.fillOpacity || props.fillOpacity || 0.5,
                   }
                 }
               }).addTo(map);
@@ -423,6 +436,13 @@ $(window).on('load', function() {
     $('div#container0').addClass("in-focus");
     $('div#contents').animate({scrollTop: '1px'});
 
+    // On first load, check hash and if it contains an number, scroll down
+    if (parseInt(location.hash.substr(1))) {
+      var containerId = parseInt( location.hash.substr(1) ) - 2;
+      $('#contents').animate({
+        scrollTop: $('#container' + containerId).offset().top
+      }, 2000);
+    }
 
     // Add Google Analytics if the ID exists
     var ga = getSetting('_googleAnalytics');
