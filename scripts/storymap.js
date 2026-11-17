@@ -20,22 +20,22 @@ $(window).on('load', function() {
     var parse = function(res) {
       return Papa.parse(Papa.unparse(res[0].values), {header: true} ).data;
     }
-  
+
     // First, try reading data from the Google Sheet
     if (typeof googleDocURL !== 'undefined' && googleDocURL) {
-  
+
       if (typeof googleApiKey !== 'undefined' && googleApiKey) {
-  
+
         var apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/'
         var spreadsheetId = googleDocURL.split('/d/')[1].split('/')[0];
-  
+
         $.when(
           $.getJSON(apiUrl + spreadsheetId + '/values/Options?key=' + googleApiKey),
           $.getJSON(apiUrl + spreadsheetId + '/values/Chapters?key=' + googleApiKey),
         ).then(function(options, chapters) {
           initMap(parse(options), parse(chapters))
         })
-  
+
       } else {
         alert('You load data from a Google Sheet, you need to add a free Google API key')
       }
@@ -43,7 +43,7 @@ $(window).on('load', function() {
     } else {
       alert('You need to specify a valid Google Sheet (googleDocURL)')
     }
-  
+
   })
 
 
@@ -85,7 +85,13 @@ $(window).on('load', function() {
   function addBaseMap() {
     var basemap = trySetting('_tileProvider', 'Stamen.TonerLite');
     L.tileLayer.provider(basemap, {
-      maxZoom: 18
+      maxZoom: 18,
+      
+      // Pass the api key to most commonly used parameters
+      apiKey: trySetting('_tileProviderApiKey', ''),
+      apikey: trySetting('_tileProviderApiKey', ''),
+      key: trySetting('_tileProviderApiKey', ''),
+      accessToken: trySetting('_tileProviderApiKey', '')
     }).addTo(map);
   }
 
@@ -153,7 +159,11 @@ $(window).on('load', function() {
           L.marker([lat, lon], {
             icon: L.ExtraMarkers.icon({
               icon: 'fa-number',
-              number: c['Marker'] === 'Plain' ? '' : chapterCount,
+              number: c['Marker'] === 'Numbered'
+                ? chapterCount
+                : (c['Marker'] === 'Plain'
+                  ? ''
+                  : c['Marker']), 
               markerColor: c['Marker Color'] || 'blue'
             }),
             opacity: c['Marker'] === 'Hidden' ? 0 : 0.9,
@@ -203,7 +213,7 @@ $(window).on('load', function() {
           allowfullscreen: 'allowfullscreen',
         });
 
-        mediaContainer = $('<div></div', {
+        mediaContainer = $('<div></div>', {
           class: 'img-container'
         }).append(media).after(source);
       }
@@ -283,14 +293,14 @@ $(window).on('load', function() {
       }
 
       for (var i = 0; i < pixelsAbove.length - 1; i++) {
-        
+
         if ( currentPosition >= pixelsAbove[i]
           && currentPosition < (pixelsAbove[i+1] - 2 * chapterContainerMargin)
           && currentlyInFocus != i
         ) {
 
           // Update URL hash
-          location.hash = i + 2;
+          location.hash = i + 1;
 
           // Remove styling for the old in-focus chapter and
           // add it to the new active chapter
@@ -301,12 +311,12 @@ $(window).on('load', function() {
           markActiveColor(currentlyInFocus);
 
           // Remove overlay tile layer if needed
-          if (map.hasLayer(overlay)) {
+          if (overlay && map.hasLayer(overlay)) {
             map.removeLayer(overlay);
           }
 
           // Remove GeoJson Overlay tile layer if needed
-          if (map.hasLayer(geoJsonOverlay)) {
+          if (geoJsonOverlay && map.hasLayer(geoJsonOverlay)) {
             map.removeLayer(geoJsonOverlay);
           }
 
@@ -371,7 +381,10 @@ $(window).on('load', function() {
           // Fly to the new marker destination if latitude and longitude exist
           if (c['Latitude'] && c['Longitude']) {
             var zoom = c['Zoom'] ? c['Zoom'] : CHAPTER_ZOOM;
-            map.flyTo([c['Latitude'], c['Longitude']], zoom);
+            map.flyTo([c['Latitude'], c['Longitude']], zoom, {
+              animate: true,
+              duration: 2, // default is 2 seconds
+            });
           }
 
           // No need to iterate through the following chapters
@@ -438,7 +451,7 @@ $(window).on('load', function() {
 
     // On first load, check hash and if it contains an number, scroll down
     if (parseInt(location.hash.substr(1))) {
-      var containerId = parseInt( location.hash.substr(1) ) - 2;
+      var containerId = parseInt( location.hash.substr(1) ) - 1;
       $('#contents').animate({
         scrollTop: $('#container' + containerId).offset().top
       }, 2000);
@@ -450,7 +463,7 @@ $(window).on('load', function() {
       var gaScript = document.createElement('script');
       gaScript.setAttribute('src','https://www.googletagmanager.com/gtag/js?id=' + ga);
       document.head.appendChild(gaScript);
-  
+
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -470,7 +483,7 @@ $(window).on('load', function() {
       // Show Google Sheet URL if the variable exists and is not empty, otherwise link to Chapters.csv
       + (typeof googleDocURL !== 'undefined' && googleDocURL ? googleDocURL : './csv/Chapters.csv')
       + '" target="_blank">data</a>';
-    
+
     var name = getSetting('_authorName');
     var url = getSetting('_authorURL');
 
