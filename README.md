@@ -1,7 +1,7 @@
 ## Live map
 https://jhsgh.github.io/storymap/
 
-## Data stored in csv folder in repository
+## Data stored in csv folder in repository, updated Nov 2026 to v1.3.2
 https://github.com/jhsgh/storymap
 
 ## Google Sheets template (used to create csv files)
